@@ -1,0 +1,194 @@
+// Main.java
+public class Main {
+    public static void main(String[] args) {
+        // Create objects from each subclass
+        StandardShipment standard = new StandardShipment(
+                "ST123", "Alice", "Bob",
+                2.5, 50, 1200, 100
+        );
+
+        ExpressShipment express = new ExpressShipment(
+                "EX456", "Charlie", "Diana",
+                1.2, 80, 1600, "High"
+        );
+
+        InternationalShipment international = new InternationalShipment(
+                "INT789", "Eve", "Frank",
+                3.5, 60, 2000, 300, "Japan"
+        );
+
+        // Display details and costs
+        System.out.println("--- Standard Shipment ---");
+        System.out.println(standard.getDetails());
+        System.out.println("Cost: " + standard.calculateCost());
+        System.out.println("Estimated Delivery: " + standard.getEstimatedDeliveryDays() + " days");
+
+        System.out.println("\n--- Express Shipment ---");
+        System.out.println(express.getDetails());
+        System.out.println("Cost: " + express.calculateCost());
+        System.out.println("Estimated Delivery: " + express.getEstimatedDeliveryDays() + " days");
+        System.out.println("High Priority? " + express.isHighPriority());
+
+        System.out.println("\n--- International Shipment ---");
+        System.out.println(international.getDetails());
+        System.out.println("Cost: " + international.calculateCost());
+        System.out.println("Estimated Delivery: " + international.getEstimatedDeliveryDays() + " days");
+        System.out.println("Requires Customs? " + international.requiresCustomsDeclaration());
+
+        // Delivery status check
+        System.out.println("\n--- Delivery Status ---");
+        System.out.println("Standard: " + standard.getDeliveryStatus());
+        standard.markDelivered();
+        System.out.println("Standard after delivery: " + standard.getDeliveryStatus());
+    }
+}
+
+// ========================= Base Class =========================
+class Shipment {
+    protected String trackingNumber;
+    protected String sender;
+    protected String receiver;
+    protected double weight;
+    protected double baseRate;
+    protected double distanceKm;
+    protected boolean delivered;
+
+    public Shipment(String trackingNumber, String sender, String receiver,
+                    double weight, double baseRate, double distanceKm) {
+        this.trackingNumber = trackingNumber;
+        this.sender = sender;
+        this.receiver = receiver;
+        this.weight = weight;
+        this.baseRate = baseRate;
+        this.distanceKm = distanceKm;
+        this.delivered = false;
+    }
+
+    public double calculateCost() {
+        return weight * baseRate;
+    }
+
+    public String getDetails() {
+        return "Tracking: " + trackingNumber +
+               "\nSender: " + sender +
+               "\nReceiver: " + receiver +
+               "\nWeight: " + weight + "kg" +
+               "\nDistance: " + distanceKm + " km" +
+               "\nDelivered: " + delivered;
+    }
+
+    public String getDeliveryStatus() {
+        return delivered ? "Delivered" : "In Transit";
+    }
+
+    public void markDelivered() {
+        this.delivered = true;
+    }
+
+    // Override in subclasses
+    public int getEstimatedDeliveryDays() {
+        return (int) Math.ceil(distanceKm / 500.0);
+    }
+}
+
+// ========================= Subclass 1 =========================
+class StandardShipment extends Shipment {
+    private double insuranceFee;
+
+    public StandardShipment(String trackingNumber, String sender, String receiver,
+                            double weight, double baseRate, double distanceKm,
+                            double insuranceFee) {
+        super(trackingNumber, sender, receiver, weight, baseRate, distanceKm);
+        this.insuranceFee = insuranceFee;
+    }
+
+    @Override
+    public double calculateCost() {
+        return super.calculateCost() + insuranceFee;
+    }
+
+    @Override
+    public String getDetails() {
+        return super.getDetails() + "\nInsurance Fee: " + insuranceFee;
+    }
+
+    @Override
+    public int getEstimatedDeliveryDays() {
+        return (int) Math.ceil(distanceKm / 500.0); // 500 km/day
+    }
+}
+
+// ========================= Subclass 2 =========================
+class ExpressShipment extends Shipment {
+    private String priorityLevel;
+    private double priorityFee;
+
+    public ExpressShipment(String trackingNumber, String sender, String receiver,
+                           double weight, double baseRate, double distanceKm,
+                           String priorityLevel) {
+        super(trackingNumber, sender, receiver, weight, baseRate, distanceKm);
+        this.priorityLevel = priorityLevel;
+        this.priorityFee = switch (priorityLevel) {
+            case "High" -> 200;
+            case "Rush" -> 500;
+            default -> 0;
+        };
+    }
+
+    @Override
+    public double calculateCost() {
+        return super.calculateCost() + priorityFee;
+    }
+
+    public boolean isHighPriority() {
+        return priorityLevel.equalsIgnoreCase("High") ||
+               priorityLevel.equalsIgnoreCase("Rush");
+    }
+
+    @Override
+    public int getEstimatedDeliveryDays() {
+        return (int) Math.ceil(distanceKm / 800.0); // 800 km/day
+    }
+
+    @Override
+    public String getDetails() {
+        return super.getDetails() +
+               "\nPriority Level: " + priorityLevel +
+               "\nPriority Fee: " + priorityFee;
+    }
+}
+
+// ========================= Subclass 3 =========================
+class InternationalShipment extends Shipment {
+    private double customsFee;
+    private String destinationCountry;
+
+    public InternationalShipment(String trackingNumber, String sender, String receiver,
+                                 double weight, double baseRate, double distanceKm,
+                                 double customsFee, String destinationCountry) {
+        super(trackingNumber, sender, receiver, weight, baseRate, distanceKm);
+        this.customsFee = customsFee;
+        this.destinationCountry = destinationCountry;
+    }
+
+    @Override
+    public double calculateCost() {
+        return super.calculateCost() + customsFee;
+    }
+
+    public boolean requiresCustomsDeclaration() {
+        return weight > 2.0;
+    }
+
+    @Override
+    public int getEstimatedDeliveryDays() {
+        return (int) Math.ceil(distanceKm / 400.0) + 2; // 400 km/day + 2 days for customs
+    }
+
+    @Override
+    public String getDetails() {
+        return super.getDetails() +
+               "\nCustoms Fee: " + customsFee +
+               "\nDestination Country: " + destinationCountry;
+    }
+}
